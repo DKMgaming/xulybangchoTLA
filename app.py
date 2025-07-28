@@ -12,8 +12,13 @@ uploaded_file = st.file_uploader("Tải lên file Word (.docx) hoặc PDF (.pdf)
 
 all_flattened_texts = []
 
-def flatten_table_row(row):
-    parts = [str(cell).strip() for cell in row if cell and str(cell).strip()]
+def flatten_table_row_with_headers(headers, row):
+    parts = []
+    for h, cell in zip(headers, row):
+        h = str(h).strip()
+        cell = str(cell).strip()
+        if h and cell:
+            parts.append(f"{h}: {cell}")
     return "; ".join(parts)
 
 if uploaded_file:
@@ -36,12 +41,15 @@ if uploaded_file:
                 df = pd.DataFrame(data)
                 st.dataframe(df)
 
-                st.markdown("### 🔄 Làm phẳng bảng (dạng văn bản)")
-                flattened_texts = [flatten_table_row(row) for row in df.values.tolist()[1:] if any(row)]
-                all_flattened_texts.extend(flattened_texts)
+                if df.shape[0] > 1:
+                    headers = df.iloc[0].tolist()
+                    rows = df.iloc[1:].values.tolist()
+                    st.markdown("### 🔄 Làm phẳng bảng (dạng văn bản có tiêu đề)")
+                    flattened_texts = [flatten_table_row_with_headers(headers, row) for row in rows if any(row)]
+                    all_flattened_texts.extend(flattened_texts)
 
-                for t in flattened_texts:
-                    st.write("- ", t)
+                    for t in flattened_texts:
+                        st.write("- ", t)
 
     elif uploaded_file.name.endswith(".pdf"):
         st.success("✅ Đang xử lý bảng trong file PDF...")
@@ -53,12 +61,15 @@ if uploaded_file:
                     df = pd.DataFrame(table)
                     st.dataframe(df)
 
-                    st.markdown("### 🔄 Làm phẳng bảng (dạng văn bản)")
-                    flattened_texts = [flatten_table_row(row) for row in df.values.tolist()[1:] if any(row)]
-                    all_flattened_texts.extend(flattened_texts)
+                    if df.shape[0] > 1:
+                        headers = df.iloc[0].tolist()
+                        rows = df.iloc[1:].values.tolist()
+                        st.markdown("### 🔄 Làm phẳng bảng (dạng văn bản có tiêu đề)")
+                        flattened_texts = [flatten_table_row_with_headers(headers, row) for row in rows if any(row)]
+                        all_flattened_texts.extend(flattened_texts)
 
-                    for t in flattened_texts:
-                        st.write("- ", t)
+                        for t in flattened_texts:
+                            st.write("- ", t)
 
 # Tải về file văn bản đã làm phẳng
 if all_flattened_texts:
